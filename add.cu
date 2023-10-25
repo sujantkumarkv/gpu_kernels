@@ -42,6 +42,7 @@ int main() {
     // Print the result
     for (int i = 0; i < N; i++) {
         printf("%f + %f : %f", A[i], B[i], C[i]);
+        printf("\n");
     }
 
     // Cleanup
