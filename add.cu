@@ -9,7 +9,7 @@ __global__ void vector_add(float *a, float *b, float *c, int N) {
 }
 
 int main() {
-    int N = 50000;
+    int N = 5;
     float *A, *B, *C; // host   
     float *d_A, *d_B, *d_C;  // device
 
