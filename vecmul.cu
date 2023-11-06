@@ -18,10 +18,15 @@ __global__ void reduction(float *d_temp, int N) {
     }
     __syncthreads();
 
-    if (N % 2 !=0 ) {
+    /**
+     * operation d_temp[0] += d_temp[N-1]; is actually safe to be performed by any thread, 
+     * not just the thread with i == 0. This is because d_temp[N-1] is not being updated 
+     * by other thread at the same time & d_temp[0] isn't being read by other thread at that time.
+    */
+    if (N % 2 !=0 && i==0) {
         d_temp[0] += d_temp[N-1];
      }
-     __syncthreads();
+    //  __syncthreads();
 }
 
 int main() {
