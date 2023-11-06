@@ -14,7 +14,8 @@ __global__ void reduction(float *d_temp, int N) {
     {
         d_temp[i] += d_temp[i+N/2];
     }
-    __syncthreads();
+    // imp. that all threads in a block reach this point before we proceed to final addition (incase of odd N)
+    __syncthreads(); // it makes all threads wait
     if (N % 2 !=0 && i==0) {
         d_temp[0] += d_temp[N-1];
     }
@@ -43,6 +44,7 @@ int vecmul_func (float *d_A_row, float *d_B_col, float *d_C_ele, int N) {
     cudaFree(d_temp);
     return 0;
 }
+
 int main() {
     int P=2, Q=3, R=2;
     float *h_A, *h_B, *h_C;     // host
@@ -60,13 +62,13 @@ int main() {
     // Initialize host arrays and copy to device
     for (int i = 0; i < P; ++i) {
         for (int j = 0; j < Q; ++j) {
-            h_A[i * Q + j] = float(i * Q + j);
+            h_A[i * Q + j] = float(1);
         }
     }
 
     for (int i = 0; i < Q; ++i) {
         for (int j = 0; j < R; ++j) {
-            h_B[i * R + j] = float(i * R + j + 69);
+            h_B[i * R + j] = float(1);
         }
     }
 
@@ -98,7 +100,7 @@ int main() {
     cudaMemcpy(h_C, d_C, P * R * sizeof(float), cudaMemcpyDeviceToHost);
 
     // result
-    printf("result h_C: %f\n", *h_C);
+    printf("result h_C:\n");
     for (int i = 0; i < P; ++i) {
         for (int j = 0; j < R; ++j) {
             printf("%f ", h_C[i * R + j]);
@@ -108,7 +110,7 @@ int main() {
     // Cleanup
     cudaFree(d_A);
     cudaFree(d_B);
-    cudaFree(d_temp);
+    cudaFree(d_C);
     free(h_A);
     free(h_B);
     free(h_C);
