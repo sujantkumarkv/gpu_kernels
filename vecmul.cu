@@ -14,15 +14,20 @@ __global__ void reduction(float *d_temp, int N) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < N/2)
     {
-        d_temp[i] = d_temp[i] + d_temp[N/2 - i -1];
-        __syncthreads();
+        d_temp[i] += d_temp[i+N/2];
     }
+    __syncthreads();
+
+    if (N % 2 !=0 ) {
+        d_temp[0] += d_temp[N-1];
+     }
+     __syncthreads();
 }
 
 int main() {
-    int N = 50000;
+    int N = 5;
     float *A, *B, *C;       // host
-    float *d_A, *d_B, *d_C; // device
+    float *d_A, *d_B;       // device
     float *d_temp;          // device temp
     // Allocate host memory
     A = (float *)malloc(N * sizeof(float));
@@ -32,13 +37,12 @@ int main() {
     // Allocate device memory
     cudaMalloc((void **)&d_A, N * sizeof(float));
     cudaMalloc((void **)&d_B, N * sizeof(float));
-    cudaMalloc((void **)&d_C, 1 * sizeof(float));
     cudaMalloc((void **)&d_temp, N * sizeof(float));
     // Initialize host arrays and copy to device
     for (int i = 0; i < N; ++i)
     {
         A[i] = float(i);
-        B[i] = float(i);
+        B[i] = float(i+69);
     }
     cudaMemcpy(d_A, A, N * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, B, N * sizeof(float), cudaMemcpyHostToDevice);
@@ -47,9 +51,9 @@ int main() {
     int threadsPerBlock = 256;
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 
-    vecmul<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_temp, N); // <<<...>>> syntax is used to specify the number of blocks and threads per block.
+    vecmul<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_temp, N);
 
-    while N > 1 {
+    while (N > 1) {
         blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
         reduction<<<blocksPerGrid, threadsPerBlock>>>(d_temp, N);
         N = N / 2;
@@ -58,15 +62,15 @@ int main() {
     cudaMemcpy(C, d_temp, 1 * sizeof(float), cudaMemcpyDeviceToHost);
 
     // Print the result
-    printf("C: %f", *C);
+    printf("C: %f\n", *C); // 720
 
     // Cleanup
     cudaFree(d_A);
     cudaFree(d_B);
-    cudaFree(d_C);
+    cudaFree(d_temp);
     free(A);
     free(B);
     free(C);
-    free(d_temp);
     return 0;
 }
+
