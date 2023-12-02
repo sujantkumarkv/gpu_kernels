@@ -2,14 +2,15 @@
 
 // Define the CUDA kernel
 __global__ void matAdd(float *a, float *b, float *c, int N) {
-    int i = blockDim.x + blockIdx.x + threadIdx.x;
-    if (i < Q) {
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i < N) {
         c[i] = a[i] + b[i];
     }
 }
 
 int main() {
     int P=2, Q=3;
+    int N = Q;
     float *h_A, *h_B, *h_C;     // host
     float *d_A, *d_B, *d_C;     // device
     // Allocate host memory
@@ -35,19 +36,16 @@ int main() {
     cudaMemcpy(d_C, h_C, P * Q * sizeof(float), cudaMemcpyHostToDevice);
 
     // for every row, invoke kernel
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
     for (int i=0; i < P; i++) {
-        for (int j=0; j<Q; j++) {
-            float *d_A_row = *d_A[i * Q];
-            float *d_B_row = *d_B[i * Q];
-            float *d_C_row = *d_C[i * Q];
+            float *d_A_row = &d_A[i * Q];
+            float *d_B_row = &d_B[i * Q];
+            float *d_C_row = &d_C[i * Q];
             // invoking kernel
-            int threadsPerBlock = 256;
-            int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
             matAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A_row, d_B_row, d_C_row, Q);
-        }
     }
-
-    cudaMemCpy(h_C, d_C, P * Q * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C, d_C, P * Q * sizeof(float), cudaMemcpyDeviceToHost);
 
     // print
     for (int i=0; i < P; i++) {
