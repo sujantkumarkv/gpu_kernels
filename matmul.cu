@@ -59,19 +59,18 @@ int main() {
     cudaMalloc((void **)&d_B, Q * R * sizeof(float));
     cudaMalloc((void **)&d_C, P * R * sizeof(float));
     // cudaMalloc((void **)&d_temp, P * R * sizeof(float));
+    
     // Initialize host arrays and copy to device
     for (int i = 0; i < P; ++i) {
         for (int j = 0; j < Q; ++j) {
             h_A[i * Q + j] = float(1);
         }
     }
-
     for (int i = 0; i < Q; ++i) {
         for (int j = 0; j < R; ++j) {
             h_B[i * R + j] = float(1);
         }
     }
-
     for (int i = 0; i < P; ++i) {
         for (int j = 0; j < R; ++j) {
             h_C[i * R + j] = 0.0f; // Initialize h_C to 0 as it will hold the result
