@@ -22,7 +22,8 @@ int main() {
     cudaMalloc((void **)&d_A, P * Q * sizeof(float));
     cudaMalloc((void **)&d_B, P * Q * sizeof(float));
     cudaMalloc((void **)&d_C, P * Q * sizeof(float));
-
+    
+    
     // initialize host matrices & copy to device
     for (int i=0; i < P; i++) {
         for (int j=0; j<Q; j++) {
@@ -38,6 +39,13 @@ int main() {
     // for every row, invoke kernel
     int threadsPerBlock = 256;
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+
+    // calculating kernel runtime
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    
+    cudaEventRecord(start, 0);
     for (int i=0; i < P; i++) {
             float *d_A_row = &d_A[i * Q];
             float *d_B_row = &d_B[i * Q];
@@ -45,6 +53,8 @@ int main() {
             // invoking kernel
             matAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A_row, d_B_row, d_C_row, Q);
     }
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
     cudaMemcpy(h_C, d_C, P * Q * sizeof(float), cudaMemcpyDeviceToHost);
 
     // print
@@ -68,11 +78,17 @@ int main() {
         }
         printf("\n");
     }
+
+    // time taken
+    float elapsed_time = 0.0f;
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    printf("\nTime taken: %f ms", elapsed_time);
     
 
     // Cleanup
     cudaFree(d_A); cudaFree(d_B); cudaFree(d_C);
     free(h_A); free(h_B); free(h_C);
+    cudaEventDestroy(start); cudaEventDestroy(stop);
 
     return 0;
 }
