@@ -44,22 +44,21 @@ int main() {
     cudaMemcpy(h_B, d_B, P * Q * sizeof(float), cudaMemcpyDeviceToHost);
 
     // print
-    printf("scale: %f", scale);
+    printf("scale: %f \n", scale);
     printf("Matrix A \n");
     for (int i=0; i < P; i++) {
         for (int j=0; j<Q; j++) {
-            printf("%f", h_A[i * Q + j]);
+            printf("%f ", h_A[i * Q + j]);
         }
         printf("\n");
     }
-    printf("\n Matrix B (Traspose of A)\n");
+    printf("\n Matrix B (scaled A)\n");
     for (int i=0; i < P; i++) {
         for (int j=0; j<Q; j++) {
-            printf("%f", h_B[i * Q + j]);
+            printf("%f ", h_B[i * Q + j]);
         }
         printf("\n");
     }
-
 
     // Cleanup
     cudaFree(d_A); cudaFree(d_B);
