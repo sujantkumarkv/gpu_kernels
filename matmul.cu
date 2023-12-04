@@ -30,12 +30,6 @@ int vecmul_func (float *d_A_row, float *d_B_col, float *d_C_ele, int N) {
 
     dim3 blockDim(16, 16); // threadsPerBlock: 256
     dim3 gridDim((P + blockDim.x - 1)/blockDim.x, (Q + blockDim.y - 1)/blockDim.y);
-    // time
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-
-    cudaEventRecord(start, 0);
 
     vecmul<<<blocksPerGrid, threadsPerBlock>>>(d_A_row, d_B_col, d_temp, N);
 
@@ -44,12 +38,6 @@ int vecmul_func (float *d_A_row, float *d_B_col, float *d_C_ele, int N) {
         reduction<<<blocksPerGrid, threadsPerBlock>>>(d_temp, N);
         N = N / 2;
     }
-    // log off
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    float elapsed_time = 0.0f;
-    cudaEventElapsedTime(&elapsed_time, start, stop);
-    printf("\nTime taken: %f ms\n", elapsed_time);
     /**
      * copying a single float value from d_temp[0] to the location pointed by d_C_ele. 
      * This effectively stores the result of vecmul & reduction in the (i, j)-th element of matrix d_C
@@ -95,6 +83,13 @@ int main() {
     cudaMemcpy(d_B, h_B, Q * R * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_C, h_C, P * R * sizeof(float), cudaMemcpyHostToDevice);
 
+    // time
+    // time
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);1
+
+    cudaEventRecord(start, 0);
     // invoke kernel for matrix rows & col
     for (int i = 0; i < P; ++i) {
         for (int j = 0; j < R; ++j) {
@@ -109,7 +104,13 @@ int main() {
             vecmul_func(d_A_row, d_B_col, d_C_ele, Q);
         }
     }
-
+    // log off
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsed_time = 0.0f;
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    printf("\nTime taken: %f ms\n", elapsed_time);
+    
     // Copy result back to host
     cudaMemcpy(h_C, d_C, P * R * sizeof(float), cudaMemcpyDeviceToHost);
 
