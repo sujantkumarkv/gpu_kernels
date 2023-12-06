@@ -19,11 +19,11 @@ __global__ void reduction (float* a, float* sum, int N) {
     }
 }
 
-__global__ void softmax (float* a, float* sum) {
+__global__ void softmax (float* a, float* sum, int N) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     // boundary check
     if (i < N) {
-        a[i] /= sum;
+        a[i] /= *sum;
     }
 }
 
@@ -36,8 +36,8 @@ int main() {
     // host
     h_A = (float *)malloc(N * sizeof(float));
     //device
-    d_A = cudaMalloc((void **)&d_A, N * sizeof(float));
-    d_sum = cudaMalloc((void **)&d_sum, sizeof(float));
+    cudaMalloc((void **)&d_A, N * sizeof(float));
+    cudaMalloc((void **)&d_sum, sizeof(float));
 
     float h_sum = 0.0f;
     // initialize host vectors & copy to device
@@ -52,22 +52,22 @@ int main() {
     printf("\n");
 
     cudaMemcpy(d_A, h_A, N*sizeof(float), cudaMemcpyHostToDevice);
-    float h_sum = 0.0f;
     cudaMemcpy(d_sum, &h_sum, sizeof(float), cudaMemcpyHostToDevice);
 
 
     // launch kernels
     exponentiate<<< 1, N >>>(d_A, N);
     reduction<<< 1, N >>>(d_A, d_sum, N);
-    softmax<<< 1, N >>>(d_A, d_sum);
+    softmax<<< 1, N >>>(d_A, d_sum, N);
 
     // copy result back
-    cudaMemcpy(h_A, d_A, 1 * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_A, d_A, N * sizeof(float), cudaMemcpyDeviceToHost);
     // print
+    printf("Softmax(A):\n");
     for (int i=1; i < N; i++) {
-        printf("softmax(A):\n");
-        printf("% ", h_A[i]);
+        printf("%f ", h_A[i]);
     }
+    printf("\n");
     // Cleanup
     cudaFree(d_A); cudaFree(d_sum);
     free(h_A);
