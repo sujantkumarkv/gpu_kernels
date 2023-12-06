@@ -77,6 +77,11 @@ int main() {
         printf("%f ", h_A[i]);
     }
     printf("\n");
+    // time taken
+    float elapsed_time = 0.0f;
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    printf("\nTime taken: %f ms\n", elapsed_time);
+    printf("\n");
     // Cleanup
     cudaFree(d_A); cudaFree(d_sum);
     free(h_A);
