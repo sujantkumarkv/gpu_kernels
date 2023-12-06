@@ -54,12 +54,21 @@ int main() {
     cudaMemcpy(d_A, h_A, N*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_sum, &h_sum, sizeof(float), cudaMemcpyHostToDevice);
 
+    // calculating kernel runtime
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start, 0);
 
     // launch kernels
     exponentiate<<< 1, N >>>(d_A, N);
     reduction<<< 1, N >>>(d_A, d_sum, N);
     softmax<<< 1, N >>>(d_A, d_sum, N);
 
+    // stop timer
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
     // copy result back
     cudaMemcpy(h_A, d_A, N * sizeof(float), cudaMemcpyDeviceToHost);
     // print
