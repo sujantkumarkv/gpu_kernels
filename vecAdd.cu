@@ -34,7 +34,7 @@ int main() {
     // Launch the CUDA kernel
     int threadsPerBlock = 256;
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
-    vector_add<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, N); // <<<...>>> syntax is used to specify the number of blocks and threads per block.
+    vector_add<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, N); // <<<..>>> is used to specify the # of blocks and threads per block.
 
     // Copy result back to host
     cudaMemcpy(C, d_C, N * sizeof(float), cudaMemcpyDeviceToHost);
@@ -44,7 +44,6 @@ int main() {
         printf("%f + %f : %f", A[i], B[i], C[i]);
         printf("\n");
     }
-
     // Cleanup
     cudaFree(d_A); cudaFree(d_B); cudaFree(d_C);
     free(A); free(B); free(C);

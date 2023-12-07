@@ -4,6 +4,7 @@
 __global__ void matAdd(float *a, float *b, float *c, int P, int Q) {
     int row = blockDim.y * blockIdx.y + threadIdx.y;
     int col = blockDim.x * blockIdx.x + threadIdx.x;
+    
     if (row < P && col < Q) {
         c[row * Q + col] = a[row * Q + col] + b[row * Q + col];
     }

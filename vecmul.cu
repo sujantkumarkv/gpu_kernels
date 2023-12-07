@@ -61,7 +61,7 @@ int main() {
         reduction<<<blocksPerGrid, threadsPerBlock>>>(d_temp, N);
         N = N / 2;
     }
-    // Copy result back to host
+    // Copy result back
     cudaMemcpy(C, d_temp, 1 * sizeof(float), cudaMemcpyDeviceToHost);
 
     // Print the result
