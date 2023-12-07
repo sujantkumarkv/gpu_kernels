@@ -77,9 +77,11 @@ int main() {
     cudaEventRecord(start, 0);
 
     // launch kernels
-    mean<<< 1, N >>>(d_A, d_sum, d_mean, N);
-    variance<<< 1, N >>>(d_A, d_mean, d_var, N);
-    layernorm<<< 1, N >>>(d_A, d_mean, d_var, d_layernorm, N);
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
+    mean<<< blocksPerGrid, threadsPerBlock >>>(d_A, d_sum, d_mean, N);
+    variance<<< blocksPerGrid, threadsPerBlock >>>(d_A, d_mean, d_var, N);
+    layernorm<<< blocksPerGrid, threadsPerBlock >>>(d_A, d_mean, d_var, d_layernorm, N);
 
     // stop timer
     cudaEventRecord(stop, 0);
