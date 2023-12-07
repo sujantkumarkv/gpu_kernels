@@ -11,12 +11,18 @@ __global__ void mean (float* a, float* sum, float* mean, int N) {
 
 __global__ void variance (float* a, float* mean, float* var, int N) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
-    float sum = 0.0f;
-    if (i < N) {
-        atomicAdd(sum, powf((a[i] - mean), 2));
+    __shared__ float sum = 0.0f;
+    if (i == 0) {
+        sum = 0.0f;
     }
     __syncthreads();
-    *var = sum / (N-1);
+    if (i < N) {
+        atomicAdd(&sum, powf((a[i] - *mean), 2));
+    }
+    __syncthreads();
+    if (i == 0) {
+        *var = sum / (N-1);
+    }
 }
 
 __global__ void layernorm (float* a, float* mean, float* var, float* layernorm, int N) {
