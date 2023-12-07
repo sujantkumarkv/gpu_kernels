@@ -20,7 +20,7 @@ __global__ void variance (float* a, float* mean, float* var, int N) {
 }
 
 __global__ void layernorm (float* a, float* mean, float* var, float* layernorm, int N) {
-    // constants / learnable parameters
+    // constants, learnable parameters
     float epsilon = 1e-8, gamma = 1.0f, beta = 0.0f;
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < N) {
@@ -72,7 +72,6 @@ int main() {
 
     // launch kernels
     mean<<< 1, N >>>(d_A, d_sum, d_mean, N);
-
     variance<<< 1, N >>>(d_A, d_sum, d_mean, d_var, N);
     layernorm<<< 1, N >>>(d_A, d_mean, d_var, d_layernorm, N);
 
@@ -81,10 +80,16 @@ int main() {
     cudaEventSynchronize(stop);
     // copy result back
     cudaMemcpy(h_A, d_A, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_mean, d_mean, 1 * sizeof(float), cudaMemcpyDeviceToHost); 
+    cudaMemcpy(h_var, d_var, 1 * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_layernorm, d_layernorm, N * sizeof(float), cudaMemcpyDeviceToHost);
+    
     // print
+    printf("Mean: %f\n", h_mean);
+    printf("Variace: %f\n", h_var);
     printf("Layernorm:\n");
     for (int i=1; i < N; i++) {
-        printf("%f ", h_A[i]);
+        printf("%f ", h_layernorm[i]);
     }
     printf("\n");
     // time taken
