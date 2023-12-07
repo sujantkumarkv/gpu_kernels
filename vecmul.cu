@@ -3,8 +3,7 @@
 // cuda kernel for multiplication
 __global__ void vecmul(float *a, float *b, float *d_temp, int N) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i < N)
-    {
+    if (i < N) {
         d_temp[i] = a[i] * b[i];
     }
 }
@@ -12,9 +11,8 @@ __global__ void vecmul(float *a, float *b, float *d_temp, int N) {
 // kernel for futher addition (reduction algo)
 __global__ void reduction(float *d_temp, int N) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i < N/2)
-    {
-        d_temp[i] += d_temp[i+N/2];
+    if (i < N/2) {
+        d_temp[i] += d_temp[i + N/2];
     }
     __syncthreads();
 
@@ -70,12 +68,8 @@ int main() {
     printf("C: %f\n", *C); // 720
 
     // Cleanup
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_temp);
-    free(A);
-    free(B);
-    free(C);
+    cudaFree(d_A); cudaFree(d_B); cudaFree(d_temp);
+    free(A); free(B); free(C);
     return 0;
 }
 
