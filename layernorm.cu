@@ -11,7 +11,7 @@ __global__ void mean (float* a, float* sum, float* mean, int N) {
 
 __global__ void variance (float* a, float* mean, float* var, int N) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
-    __shared__ float sum = 0.0f;
+    __shared__ float sum;
     if (i == 0) {
         sum = 0.0f;
     }
@@ -78,7 +78,7 @@ int main() {
 
     // launch kernels
     mean<<< 1, N >>>(d_A, d_sum, d_mean, N);
-    variance<<< 1, N >>>(d_A, d_sum, d_mean, d_var, N);
+    variance<<< 1, N >>>(d_A, d_mean, d_var, N);
     layernorm<<< 1, N >>>(d_A, d_mean, d_var, d_layernorm, N);
 
     // stop timer
@@ -91,8 +91,13 @@ int main() {
     cudaMemcpy(h_layernorm, d_layernorm, N * sizeof(float), cudaMemcpyDeviceToHost);
     
     // print
-    printf("Mean: %f\n", h_mean);
-    printf("Variace: %f\n", h_var);
+    /*
+    h_mean & h_var below gives error & thus *h_mean and *h_var is used bcz
+    printf expects a double/float for %f format, but a float* (pointer to float) was given.
+    and, h_A[i] and h_layernorm[i] are not pointers, they are float values, so they work :)
+    */
+    printf("Mean: %f\n", *h_mean);
+    printf("Variace: %f\n", *h_var);
     printf("Layernorm:\n");
     for (int i=1; i < N; i++) {
         printf("%f ", h_layernorm[i]);
